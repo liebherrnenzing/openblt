@@ -55,6 +55,10 @@ void BootInit(void)
   /* initialize the communication module */
   ComInit();
 #endif
+#if (COMM_USR_ENABLE > 0)
+  /* initialize the user dependent communication module */
+  CommUsrInit();
+#endif
   /* initialize the backdoor entry */
   BackDoorInit();
 } /*** end of BootInit ***/
@@ -78,6 +82,10 @@ void BootTask(void)
 #if (BOOT_COM_ENABLE > 0)
   /* process possibly pending communication data */
   ComTask();
+#endif
+#if (COMM_USR_ENABLE > 0)
+  /* process possibly pending user if communication data */
+  CommUsrTask();
 #endif
   /* control the backdoor */
   BackDoorCheck();

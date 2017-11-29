@@ -411,7 +411,7 @@ int main(int argc, char const * const argv[])
   {
     /* Stop the session. */
     printf("Finishing programming session..."); (void)fflush(stdout);
-    BltSessionStop();
+    BltSessionStop(true);
     printf("%s\n", GetLineTrailerByResult((bool)false));
   }
 

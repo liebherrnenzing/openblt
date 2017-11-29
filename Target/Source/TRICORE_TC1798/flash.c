@@ -536,7 +536,7 @@ static tFlashBlockInfo *FlashSwitchBlock(tFlashBlockInfo *block, blt_addr base_a
     }
   }
 
-  /* initialize tne new block when necessary */
+  /* initialize the new block when necessary */
   if (FlashInitBlock(block, base_addr) == BLT_FALSE)
   {
     return BLT_NULL;

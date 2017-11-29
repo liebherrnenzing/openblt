@@ -33,6 +33,7 @@
 ****************************************************************************************/
 void BackDoorInit(void);
 void BackDoorCheck(void);
+blt_bool BackDoorIsOpen(void);
 
 #endif /* BACKDOOR_H */
 /*********************************** end of backdoor.h *********************************/

@@ -1,5 +1,5 @@
 /************************************************************************************//**
-* \file         port/linux/timeutil.c
+* \file         port\stm32_ARMCM3\timeutil.c
 * \brief        Time utility source file.
 * \ingroup      Utility
 * \internal
@@ -29,13 +29,8 @@
 /****************************************************************************************
 * Include files
 ****************************************************************************************/
-#include <stdint.h>                         /* for standard integer types              */
-#include <stddef.h>                         /* for NULL declaration                    */
-#include <stdbool.h>                        /* for boolean type                        */
-#include <unistd.h>                         /* UNIX standard functions                 */
-#include <sys/time.h>                       /* time definitions                        */
-#include "util.h"                           /* Utility module                          */
-
+#include <stdint.h>
+#include "boot.h"
 
 /************************************************************************************//**
 ** \brief     Get the system time in milliseconds.
@@ -44,16 +39,8 @@
 ****************************************************************************************/
 uint32_t UtilTimeGetSystemTimeMs(void)
 {
-  uint32_t result = 0;
-  struct timeval tv;
-
-  if (gettimeofday(&tv, NULL) == 0)
-  {
-    result = (((uint32_t)tv.tv_sec * 1000ul) + ((uint32_t)tv.tv_usec / 1000ul));
-  }
-  /* Give the result back to the caller. */
-  return result;
-} /*** end of UtilTimeGetSystemTimeMs ***/
+  return TimerGet();
+} /*** end of XcpTransportClose ***/
 
 
 /************************************************************************************//**
@@ -63,9 +50,15 @@ uint32_t UtilTimeGetSystemTimeMs(void)
 ****************************************************************************************/
 void UtilTimeDelayMs(uint16_t delay)
 {
-  (void)usleep(1000u * delay);
+  uint32_t mtEnd;
+
+  mtEnd = UtilTimeGetSystemTimeMs() + (uint32_t)(delay);
+  while (UtilTimeGetSystemTimeMs() < mtEnd)
+  {
+    /* keep the watchdog happy */
+    CopService();
+  }
 } /*** end of UtilTimeDelayMs **/
 
 
 /*********************************** end of timeutil.c *********************************/
-

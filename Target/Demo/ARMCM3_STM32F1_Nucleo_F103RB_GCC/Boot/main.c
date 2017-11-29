@@ -199,7 +199,7 @@ static void Init(void)
   GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3;
   GPIO_Init(GPIOA, &GPIO_InitStruct);
-  /* configure UART communcation parameters */
+  /* configure UART communication parameters */
   USART_InitStruct.USART_BaudRate = BOOT_COM_UART_BAUDRATE;
   USART_InitStruct.USART_WordLength = USART_WordLength_8b;
   USART_InitStruct.USART_StopBits = USART_StopBits_1;

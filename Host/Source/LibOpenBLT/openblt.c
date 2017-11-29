@@ -39,9 +39,12 @@
 #include "session.h"                        /* Communication session module            */
 #include "xcploader.h"                      /* XCP loader module                       */
 #include "xcptpuart.h"                      /* XCP UART transport layer                */
+#ifdef LIBOPENBLT_CAN_ENABLE
 #include "xcptpcan.h"                       /* XCP CAN transport layer                 */
+#endif
+#ifdef LIBOPENBLT_USB_ENABLE
 #include "xcptpusb.h"                       /* XCP USB transport layer                 */
-
+#endif
 
 /****************************************************************************************
 * Macro definitions
@@ -117,9 +120,27 @@ LIBOPENBLT_EXPORT void BltSessionInit(uint32_t sessionType,
    * no additional settings are needed for the specified session or transport type.
    */
   assert(sessionType == BLT_SESSION_XCP_V10);
+
+#if defined(LIBOPENBLT_CAN_ENABLE) && !defined(LIBOPENBLT_USB_ENABLE)
+  assert( (transportType == BLT_TRANSPORT_XCP_V10_RS232) || \
+          (transportType == BLT_TRANSPORT_XCP_V10_CAN) );
+#endif
+
+#if defined(LIBOPENBLT_USB_ENABLE) && !defined(LIBOPENBLT_CAN_ENABLE)
+  assert( (transportType == BLT_TRANSPORT_XCP_V10_RS232) || \
+          (transportType == BLT_TRANSPORT_XCP_V10_USB) );
+#endif
+
+#if !defined(LIBOPENBLT_CAN_ENABLE) && !defined(LIBOPENBLT_USB_ENABLE)
+  assert( transportType == BLT_TRANSPORT_XCP_V10_RS232 );
+#endif
+
+#if defined(LIBOPENBLT_CAN_ENABLE) && defined(LIBOPENBLT_USB_ENABLE)
   assert( (transportType == BLT_TRANSPORT_XCP_V10_RS232) || \
           (transportType == BLT_TRANSPORT_XCP_V10_CAN) || \
           (transportType == BLT_TRANSPORT_XCP_V10_USB) );
+#endif
+
 
   /* Initialize the correct session. */
   if (sessionType == BLT_SESSION_XCP_V10) /*lint !e774 */
@@ -170,6 +191,7 @@ LIBOPENBLT_EXPORT void BltSessionInit(uint32_t sessionType,
           xcpLoaderSettings.transport = XcpTpUartGetTransport();
         }
       }
+#ifdef LIBOPENBLT_CAN_ENABLE
       else if (transportType == BLT_TRANSPORT_XCP_V10_CAN)
       {
         /* Verify transportSettings parameters because the XCP CAN transport layer 
@@ -200,6 +222,8 @@ LIBOPENBLT_EXPORT void BltSessionInit(uint32_t sessionType,
           xcpLoaderSettings.transport = XcpTpCanGetTransport();
         }
       }
+#endif
+#ifdef LIBOPENBLT_USB_ENABLE
       else if (transportType == BLT_TRANSPORT_XCP_V10_USB)
       {
         /* Store transport layer settings in the XCP loader settings. */
@@ -207,6 +231,7 @@ LIBOPENBLT_EXPORT void BltSessionInit(uint32_t sessionType,
         /* Link the transport layer to the XCP loader settings. */
         xcpLoaderSettings.transport = XcpTpUsbGetTransport();
       }
+#endif
       /* Perform actual session initialization. */
       SessionInit(XcpLoaderGetProtocol(), &xcpLoaderSettings);
     }
@@ -250,12 +275,14 @@ LIBOPENBLT_EXPORT uint32_t BltSessionStart(void)
 /************************************************************************************//**
 ** \brief     Stops the firmware update session. This is there the library disconnects
 **            the transport layer as well.
-**
+** \param     disconnect true stop programming and disconnect, false stop programming
+**            but do not disconnect. This is useful if someone want to add some following
+**            read commands or something else.
 ****************************************************************************************/
-LIBOPENBLT_EXPORT void BltSessionStop(void)
+LIBOPENBLT_EXPORT void BltSessionStop(bool disconnect)
 {
   /* Stop the session. */
-  SessionStop();
+  SessionStop(disconnect);
 } /*** end of BltSessionStop ***/
 
 
@@ -357,6 +384,7 @@ LIBOPENBLT_EXPORT uint32_t BltSessionReadData(uint32_t address, uint32_t len,
 } /*** end of BltSessionReadData ***/
 
 
+#ifdef LIBOPENBLT_FIRMWARE_ENABLE
 /****************************************************************************************
 *             F I R M W A R E   D A T A
 ****************************************************************************************/
@@ -582,8 +610,9 @@ LIBOPENBLT_EXPORT void BltFirmwareClearData(void)
   /* Pass the request on to the firmware data module. */
   FirmwareClearData();
 } /*** end of BltFirmwareClearData ***/
+#endif
 
-
+#ifdef LIBOPENBLT_UTIL_ENABLE
 /****************************************************************************************
 *             G E N E R I C   U T I L I T I E S
 ****************************************************************************************/
@@ -732,7 +761,7 @@ LIBOPENBLT_EXPORT uint32_t BltUtilCryptoAes256Decrypt(uint8_t * data, uint32_t l
   /* Give the result back to the caller. */
   return result;
 } /*** end of BltUtilCryptoAes256Decrypt ***/
-
+#endif
 
 /*********************************** end of openblt.c **********************************/
 

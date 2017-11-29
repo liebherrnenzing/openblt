@@ -73,7 +73,7 @@
 static void XcpLoaderInit(void const * settings);
 static void XcpLoaderTerminate(void);
 static bool XcpLoaderStart(void);
-static void XcpLoaderStop(void);
+static void XcpLoaderStop(bool disconnet);
 static bool XcpLoaderClearMemory(uint32_t address, uint32_t len);
 static bool XcpLoaderWriteData(uint32_t address, uint32_t len, uint8_t const * data);  
 static bool XcpLoaderReadData(uint32_t address, uint32_t len, uint8_t * data);
@@ -155,7 +155,9 @@ tSessionProtocol const * XcpLoaderGetProtocol(void)
 ****************************************************************************************/
 static void XcpLoaderInit(void const * settings)
 {
+#ifdef LIBOPENBLT_SEED_KEY_ENABLE
   char * seedNKeyFileName;
+#endif
 
   /* Initialize locals. */
   xcpConnected = false;
@@ -183,6 +185,7 @@ static void XcpLoaderInit(void const * settings)
     /* shallow copy the XCP settings for later usage */
     xcpSettings = *(tXcpLoaderSettings *)settings;
 
+#ifdef LIBOPENBLT_SEED_KEY_ENABLE
     /* The seedKeyFile is a pointer and it is not guaranteed that it stays valid so we
      * need to deep copy this one. note the +1 for '\0' in malloc. Note that it is okay
      * for this value to be NULL.
@@ -197,6 +200,8 @@ static void XcpLoaderInit(void const * settings)
         xcpSettings.seedKeyFile = seedNKeyFileName;
       }
     }
+#endif
+
     /* Check that a valid transport layer was specified. */
     assert(xcpSettings.transport != NULL);
     /* Only access the transport layer if it is valid. */
@@ -230,17 +235,19 @@ static void XcpLoaderTerminate(void)
   if (xcpSettings.transport != NULL) /*lint !e774 */
   {
     /* Stop the session. */
-    XcpLoaderStop();
+    XcpLoaderStop(true);
     /* Terminate the transport layer. */
     xcpSettings.transport->Terminate();
     /* Unlink the transport layer. */
     xcpSettings.transport = NULL;
   }
+#ifdef LIBOPENBLT_SEED_KEY_ENABLE
   /* Release memory that was allocated for storing the seedKeyFile. */
   if (xcpSettings.seedKeyFile != NULL)
   {
     free((char *)xcpSettings.seedKeyFile);
   }
+#endif
   /* Reset the XCP session layer settings. */
   xcpSettings.timeoutT1 = 1000;
   xcpSettings.timeoutT3 = 2000;
@@ -273,7 +280,7 @@ static bool XcpLoaderStart(void)
   if (xcpSettings.transport != NULL) /*lint !e774 */
   {
     /* Make sure the session is stopped before starting a new one. */
-    XcpLoaderStop();
+    XcpLoaderStop(true);
     /* Init the result value to okay and only set it to error when a problem occurred. */
     result = true;
     /* Connect the transport layer. */
@@ -400,7 +407,7 @@ static bool XcpLoaderStart(void)
 **            with the target is severed.
 **
 ****************************************************************************************/
-static void XcpLoaderStop(void)
+static void XcpLoaderStop(bool disconnet)
 {
   /* Make sure a valid transport layer is linked. */
   assert(xcpSettings.transport != NULL);
@@ -411,15 +418,22 @@ static void XcpLoaderStop(void)
     /* End the programming session by sending the program command with size 0. */
     if (XcpLoaderSendCmdProgram(0, NULL))
     {
-      /* Disconnect the target. Here the reset command is used instead of the disconnect
-       * command, because the bootloader should start the user program on the target.
-       */
-      (void)XcpLoaderSendCmdProgramReset();
+      if (true == disconnet)
+      {
+        /* Disconnect the target. Here the reset command is used instead of the disconnect
+         * command, because the bootloader should start the user program on the target.
+         */
+    	(void)XcpLoaderSendCmdProgramReset();
+      }
     }
-    /* Disconnect the transport layer. */
-    xcpSettings.transport->Disconnect();
-    /* Reset connection status. */
-    xcpConnected = false;
+
+    if (true == disconnet)
+    {
+      /* Disconnect the transport layer. */
+      xcpSettings.transport->Disconnect();
+      /* Reset connection status. */
+      xcpConnected = false;
+    }
   }
 } /*** end of XcpLoaderStop ***/
 

@@ -31,6 +31,10 @@
 ****************************************************************************************/
 #include "boot.h"                                /* bootloader generic header          */
 
+#if (BOOT_CPU_SET_USER_PROGRAM_SP_PTR > 0)
+#include "stm32f10x.h"
+#include "core_cm3.h"
+#endif
 
 /****************************************************************************************
 * Macro definitions
@@ -99,6 +103,10 @@ void CpuStartUserProgram(void)
   /* release the communication interface */
   ComFree();
 #endif
+#if (COMM_USR_ENABLE > 0)
+  /* release the user interface */
+  CommUsrFree();
+#endif
   /* reset the timer */
   TimerReset();
   /* remap user program's vector table */
@@ -113,6 +121,11 @@ void CpuStartUserProgram(void)
    * not have to be done by the user program.
    */
   CpuIrqEnable();
+
+#if (BOOT_CPU_SET_USER_PROGRAM_SP_PTR > 0)
+  __set_MSP(*(__IO uint32_t *)(CPU_USER_PROGRAM_STARTADDR_PTR-4));
+#endif
+
   /* start the user program by activating its reset interrupt service routine */
   pProgResetHandler();
 } /*** end of CpuStartUserProgram ***/

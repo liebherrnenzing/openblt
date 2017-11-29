@@ -141,7 +141,7 @@ $(BIN_PATH)/$(PROJ_NAME).srec : $(BIN_PATH)/$(PROJ_NAME).elf
 	@$(SZ) $(SZFLAGS) $<
 	@echo +++ Build complete [$(notdir $@)]
 
-$(BIN_PATH)/$(PROJ_NAME).elf : $(AOBJS) $(COBJS) 
+$(BIN_PATH)/$(PROJ_NAME).elf : $(AOBJS) $(COBJS)
 	@echo +++ Linking [$(notdir $@)]
 	@$(LN) $(LFLAGS) -o $@ $(patsubst %.o,$(OBJ_PATH)/%.o,$(^F)) $(LIBS)
 
