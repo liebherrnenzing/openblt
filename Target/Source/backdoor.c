@@ -144,6 +144,17 @@ void BackDoorCheck(void)
   }
 #endif
 
+#if (COMM_USR_ENABLE > 0)
+  /* check if user if is busy, indicating that any update through the
+  * locally user module is in progress. in this case the backdoor stays open
+  * anyway, so no need to check if it needs to be closed.
+  */
+  if (CommUsrIdle() == BLT_FALSE)
+  {
+    return;
+  }
+#endif
+
   /* when the backdoor is still open, check if it's time to close it */
   if (backdoorOpen == BLT_TRUE)
   {
@@ -169,6 +180,17 @@ void BackDoorCheck(void)
   }
 #endif
 } /*** end of BackDoorCheck ***/
+
+
+/************************************************************************************//**
+** \brief     This function obtains the Backdoor open state.
+** \return    BLT_TRUE when the Backdoor is open, BLT_FALSE otherwise.
+**
+****************************************************************************************/
+blt_bool BackDoorIsOpen(void)
+{
+  return backdoorOpen;
+} /*** end of BackDoorIsOpen ***/
 
 
 /*********************************** end of backdoor.c *********************************/

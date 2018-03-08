@@ -63,6 +63,7 @@
 #include "backdoor.h"                                 /* backdoor entry module         */
 #include "file.h"                                     /* file system module            */
 #include "com.h"                                      /* communication interface       */
+#include "comm_usr.h"                                 /* user interface module         */
 
 
 /****************************************************************************************

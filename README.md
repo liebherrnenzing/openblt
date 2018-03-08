@@ -1,4 +1,4 @@
-# OpenBLT Bootloader
+# OpenBLT GNU GPL Bootloader
 
 OpenBLT is an open source bootloader for STM32, XMC, HCS12 and other 
 microcontroller targets.
