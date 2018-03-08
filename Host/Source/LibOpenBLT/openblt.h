@@ -44,7 +44,7 @@ extern "C" {
 * Include files
 ****************************************************************************************/
 #include <stdint.h>                         /* for standard integer types              */
-
+#include <stdbool.h>                        /* for standard boolean types              */
 
 /****************************************************************************************
 * Macro definitions
@@ -186,7 +186,7 @@ LIBOPENBLT_EXPORT void BltSessionInit(uint32_t sessionType,
                                       void const * transportSettings);
 LIBOPENBLT_EXPORT void BltSessionTerminate(void);
 LIBOPENBLT_EXPORT uint32_t BltSessionStart(void);
-LIBOPENBLT_EXPORT void BltSessionStop(void);
+LIBOPENBLT_EXPORT void BltSessionStop(bool disconnect);
 LIBOPENBLT_EXPORT uint32_t BltSessionClearMemory(uint32_t address, uint32_t len);
 LIBOPENBLT_EXPORT uint32_t BltSessionWriteData(uint32_t address, uint32_t len, 
                                                uint8_t const * data);
@@ -207,7 +207,7 @@ LIBOPENBLT_EXPORT uint32_t BltSessionReadData(uint32_t address, uint32_t len,
  */
 #define BLT_FIRMWARE_PARSER_SRECORD    ((uint32_t)0u)
 
-
+#ifdef LIBOPENBLT_FIRMWARE_ENABLE
 /****************************************************************************************
 * Function prototypes
 ****************************************************************************************/
@@ -223,8 +223,9 @@ LIBOPENBLT_EXPORT uint32_t BltFirmwareAddData(uint32_t address, uint32_t len,
                                               uint8_t const * data);
 LIBOPENBLT_EXPORT uint32_t BltFirmwareRemoveData(uint32_t address, uint32_t len);
 LIBOPENBLT_EXPORT void BltFirmwareClearData(void);
+#endif
 
-
+#ifdef LIBOPENBLT_UTIL_ENABLE
 /****************************************************************************************
 *             G E N E R I C   U T I L I T I E S
 ****************************************************************************************/
@@ -239,7 +240,7 @@ LIBOPENBLT_EXPORT uint32_t BltUtilCryptoAes256Encrypt(uint8_t * data, uint32_t l
                                                       uint8_t const * key);
 LIBOPENBLT_EXPORT uint32_t BltUtilCryptoAes256Decrypt(uint8_t * data, uint32_t len,
                                                       uint8_t const * key);
-
+#endif
 
 #ifdef __cplusplus
 }

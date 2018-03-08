@@ -95,6 +95,9 @@ tXcpTransport const * XcpTpUartGetTransport(void)
 static void XcpTpUartInit(void const * settings)
 {
   char * uartPortName;
+#if !defined(PLATFORM_WIN32) && !defined(PLATFORM_LINUX)
+  char uartPortNameBuffer[8];
+#endif
 
   /* Reset transport layer settings. */
   tpUartSettings.portname = NULL;
@@ -114,7 +117,11 @@ static void XcpTpUartInit(void const * settings)
     assert(((tXcpTpUartSettings *)settings)->portname != NULL);
     if (((tXcpTpUartSettings *)settings)->portname != NULL) /*lint !e774 */
     {
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_LINUX)
       uartPortName = malloc(strlen(((tXcpTpUartSettings *)settings)->portname) + 1);
+#else
+      uartPortName = uartPortNameBuffer;
+#endif
       assert(uartPortName != NULL);
       if (uartPortName != NULL) /*lint !e774 */
       {
@@ -139,7 +146,9 @@ static void XcpTpUartTerminate(void)
   /* Release memory that was allocated for storing the port name. */
   if (tpUartSettings.portname != NULL)
   {
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_LINUX)
     free((char *)tpUartSettings.portname);
+#endif
   }
   /* Reset transport layer settings. */
   tpUartSettings.portname = NULL;

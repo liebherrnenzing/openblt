@@ -84,6 +84,12 @@ elseif(UNIX)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPLATFORM_LINUX -pthread -std=gnu99")
 endif(WIN32)
 
+add_definitions(-DLIBOPENBLT_CAN_ENABLE)
+add_definitions(-DLIBOPENBLT_USB_ENABLE)
+add_definitions(-DLIBOPENBLT_NET_ENABLE)
+add_definitions(-DLIBOPENBLT_FIRMWARE_ENABLE)
+add_definitions(-DLIBOPENBLT_UTIL_ENABLE)
+add_definitions(-DLIBOPENBLT_SEED_KEY_ENABLE)
 
 #***************************************************************************************
 # Includes
