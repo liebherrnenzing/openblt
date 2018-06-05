@@ -30,7 +30,13 @@
 * Include files
 ****************************************************************************************/
 #include "boot.h"                                /* bootloader generic header          */
-#include <machine/intrinsics.h>
+#include "cpu_comp.h"                            /* compiler specific CPU definitions  */
+
+
+/****************************************************************************************
+* Macro definitions
+****************************************************************************************/
+#define CPU_INIT_MODE_TIMEOUT_MS       (250u)
 
 
 /****************************************************************************************
@@ -73,13 +79,22 @@ void CpuIrqEnable(void)
 ****************************************************************************************/
 void CpuEnterInitMode(void)
 {
+  blt_int32u timeout;
+  
   /* request clearing of the EndInit bit */
   CpuWriteWDTCON0(WDT_CON0.reg & ~0x00000001);
+  /* set timeout to wait for hardware handshake */
+  timeout = TimerGet() + CPU_INIT_MODE_TIMEOUT_MS;
   /* wait for hardware handshake */
   while (WDT_CON0.bits.ENDINIT != 0)
   {
     /* keep the watchdog happy */
     CopService();
+    /* break loop if timeout occurred */
+    if (TimerGet() > timeout)
+    {
+      break;
+    }
   }
 } /*** end of CpuEnterInitMode ***/
 

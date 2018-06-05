@@ -54,7 +54,7 @@
 #define FLASH_ERASE_BLOCK_SIZE          (0x400)
 #endif
 /** \brief Macro for accessing the flash control registers. */
-#define FLASH                           ((tFlashRegs *) (blt_int32u)0x40022000)
+#define FLASH_DRV_REGS_BASE             ((tFlashRegs *) (blt_int32u)0x40022000)
 /** \brief Offset into the user program's vector table where the checksum is located. 
  *         For this target it is set to the end of the vector table. Note that the 
  *         value can be overriden in blt_conf.h, because the size of the vector table
@@ -65,6 +65,17 @@
 #ifndef BOOT_FLASH_VECTOR_TABLE_CS_OFFSET
 #define BOOT_FLASH_VECTOR_TABLE_CS_OFFSET    (0x150)
 #endif
+
+/** \brief Maximum time for a sector erase operation as specified by the STM32F1 data-
+ *         sheet with an added margin of at least 20%.
+ */
+#define FLASH_ERASE_TIME_MAX_MS         (100)
+
+/** \brief Maximum time for a page program operation as specified by the STM32F1 data-
+ *         sheet with an added margin of at least 20%.
+ */
+#define FLASH_PROGRAM_TIME_MAX_MS       (5)
+
 
 #define FLASH_KEY1                      ((blt_int32u)0x45670123)
 #define FLASH_KEY2                      ((blt_int32u)0xCDEF89AB)
@@ -741,6 +752,7 @@ static blt_bool FlashWriteBlock(tFlashBlockInfo *block)
   blt_addr   prog_addr;
   blt_int32u prog_data;
   blt_int32u word_cnt;
+  blt_int32u timeout;
 
   /* check that address is actually within flash */
   sector_num = FlashGetSector(block->base_addr);
@@ -768,7 +780,7 @@ static blt_bool FlashWriteBlock(tFlashBlockInfo *block)
   /* unlock the flash array */
   FlashUnlock();
   /* check that the flash peripheral is not busy */
-  if ((FLASH->SR & FLASH_BSY_BIT) == FLASH_BSY_BIT)
+  if ((FLASH_DRV_REGS_BASE->SR & FLASH_BSY_BIT) == FLASH_BSY_BIT)
   {
     /* lock the flash array again */
     FlashLock();
@@ -776,7 +788,7 @@ static blt_bool FlashWriteBlock(tFlashBlockInfo *block)
     return BLT_FALSE;
   }
   /* set the program bit to indicate that we are about to program data */
-  FLASH->CR |= FLASH_PG_BIT;
+  FLASH_DRV_REGS_BASE->CR |= FLASH_PG_BIT;
   /* program all words in the block one by one */
   for (word_cnt=0; word_cnt<(FLASH_WRITE_BLOCK_SIZE/sizeof(blt_int32u)); word_cnt++)
   {
@@ -784,19 +796,35 @@ static blt_bool FlashWriteBlock(tFlashBlockInfo *block)
     prog_data = *(volatile blt_int32u *)(&block->data[word_cnt * sizeof(blt_int32u)]);
     /* program the first half word */
     *(volatile blt_int16u *)prog_addr = (blt_int16u)prog_data;
+    /* set the timeout time for the program operation */
+    timeout = TimerGet() + FLASH_PROGRAM_TIME_MAX_MS;
     /* wait for the program operation to complete */
-    while ((FLASH->SR & FLASH_BSY_BIT) == FLASH_BSY_BIT)
+    while ((FLASH_DRV_REGS_BASE->SR & FLASH_BSY_BIT) == FLASH_BSY_BIT)
     {
       /* keep the watchdog happy */
       CopService();
+      /* check for timeout */
+      if (TimerGet() > timeout)
+      {
+        result = BLT_FALSE;
+        break;
+      }
     }
     /* program the second half word */
     *(volatile blt_int16u *)(prog_addr+2) = (blt_int16u)(prog_data >> 16);
+    /* set the timeout time for the program operation */
+    timeout = TimerGet() + FLASH_PROGRAM_TIME_MAX_MS;
     /* wait for the program operation to complete */
-    while ((FLASH->SR & FLASH_BSY_BIT) == FLASH_BSY_BIT)
+    while ((FLASH_DRV_REGS_BASE->SR & FLASH_BSY_BIT) == FLASH_BSY_BIT)
     {
       /* keep the watchdog happy */
       CopService();
+      /* check for timeout */
+      if (TimerGet() > timeout)
+      {
+        result = BLT_FALSE;
+        break;
+      }
     }
     /* verify that the written data is actually there */
     if (*(volatile blt_int32u *)prog_addr != prog_data)
@@ -806,10 +834,10 @@ static blt_bool FlashWriteBlock(tFlashBlockInfo *block)
     }
   }
   /* reset the program bit to indicate that we are done programming data */
-  FLASH->CR &= ~FLASH_PG_BIT;
+  FLASH_DRV_REGS_BASE->CR &= ~FLASH_PG_BIT;
   /* lock the flash array */
   FlashLock();
-  /* still here so all is okay */
+  /* give the result back to the caller */
   return result;
 } /*** end of FlashWriteBlock ***/
 
@@ -827,6 +855,8 @@ static blt_bool FlashEraseSectors(blt_int8u first_sector, blt_int8u last_sector)
   blt_int16u block_cnt;
   blt_addr   start_addr;
   blt_addr   end_addr;
+  blt_int32u timeout;
+  blt_bool   result = BLT_TRUE;
 
   /* validate the sector numbers */
   if (first_sector > last_sector)
@@ -841,7 +871,7 @@ static blt_bool FlashEraseSectors(blt_int8u first_sector, blt_int8u last_sector)
   /* unlock the flash array */
   FlashUnlock();
   /* check that the flash peripheral is not busy */
-  if ((FLASH->SR & FLASH_BSY_BIT) == FLASH_BSY_BIT)
+  if ((FLASH_DRV_REGS_BASE->SR & FLASH_BSY_BIT) == FLASH_BSY_BIT)
   {
     /* lock the flash array again */
     FlashLock();
@@ -849,7 +879,7 @@ static blt_bool FlashEraseSectors(blt_int8u first_sector, blt_int8u last_sector)
     return BLT_FALSE;
   }
   /* set the page erase bit to indicate that we are about to erase a block */
-  FLASH->CR |= FLASH_PER_BIT;
+  FLASH_DRV_REGS_BASE->CR |= FLASH_PER_BIT;
 
   /* determine how many blocks need to be erased */
   start_addr = FlashGetSectorBaseAddr(first_sector);
@@ -860,22 +890,30 @@ static blt_bool FlashEraseSectors(blt_int8u first_sector, blt_int8u last_sector)
   for (block_cnt=0; block_cnt<nr_of_blocks; block_cnt++)
   {
     /* store an address of the block that is to be erased to select the block */
-    FLASH->AR = start_addr + (block_cnt * FLASH_ERASE_BLOCK_SIZE);
+    FLASH_DRV_REGS_BASE->AR = start_addr + (block_cnt * FLASH_ERASE_BLOCK_SIZE);
     /* start the block erase operation */
-    FLASH->CR |= FLASH_STRT_BIT;
+    FLASH_DRV_REGS_BASE->CR |= FLASH_STRT_BIT;
+    /* set the timeout time for the erase operation */
+    timeout = TimerGet() + FLASH_ERASE_TIME_MAX_MS;
     /* wait for the erase operation to complete */
-    while ((FLASH->SR & FLASH_BSY_BIT) == FLASH_BSY_BIT)
+    while ((FLASH_DRV_REGS_BASE->SR & FLASH_BSY_BIT) == FLASH_BSY_BIT)
     {
       /* keep the watchdog happy */
       CopService();
+      /* check for timeout */
+      if (TimerGet() > timeout)
+      {
+        result = BLT_FALSE;
+        break;
+      }
     }
   }
   /* reset the page erase bit because we're all done erasing */
-  FLASH->CR &= ~FLASH_PER_BIT;
+  FLASH_DRV_REGS_BASE->CR &= ~FLASH_PER_BIT;
   /* lock the flash array */
   FlashLock();
-  /* still here so all went okay */
-  return BLT_TRUE;
+  /* give the result back to the caller */
+  return result;
 } /*** end of FlashEraseSectors ***/
 
 
@@ -888,10 +926,10 @@ static blt_bool FlashEraseSectors(blt_int8u first_sector, blt_int8u last_sector)
 static void FlashUnlock(void)
 {
   /* authorize the FPEC to access bank 1 */
-  FLASH->KEYR = FLASH_KEY1;
-  FLASH->KEYR = FLASH_KEY2;
+  FLASH_DRV_REGS_BASE->KEYR = FLASH_KEY1;
+  FLASH_DRV_REGS_BASE->KEYR = FLASH_KEY2;
   /* clear all possibly pending status flags */
-  FLASH->SR = (FLASH_EOP_BIT | FLASH_PGERR_BIT | FLASH_WRPRTERR_BIT);
+  FLASH_DRV_REGS_BASE->SR = (FLASH_EOP_BIT | FLASH_PGERR_BIT | FLASH_WRPRTERR_BIT);
 } /*** end of FlashUnlock ***/
 
 
@@ -904,7 +942,7 @@ static void FlashUnlock(void)
 static void FlashLock(void)
 {
   /* set the lock bit to lock the FPEC */
-  FLASH->CR |= FLASH_LOCK_BIT;
+  FLASH_DRV_REGS_BASE->CR |= FLASH_LOCK_BIT;
 } /*** end of FlashLock ***/
 
 
