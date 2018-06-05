@@ -423,20 +423,20 @@ static void XcpLoaderStop(bool disconnet)
     {
       if (true == disconnet)
       {
-      /* Disconnect the target. Here the reset command is used instead of the disconnect
-       * command, because the bootloader should start the user program on the target.
-       */
-      (void)XcpLoaderSendCmdProgramReset();
-    }
+        /* Disconnect the target. Here the reset command is used instead of the disconnect
+         * command, because the bootloader should start the user program on the target.
+         */
+        (void)XcpLoaderSendCmdProgramReset();
+      }
     }
 
     if (true == disconnet)
     {
-    /* Disconnect the transport layer. */
-    xcpSettings.transport->Disconnect();
-    /* Reset connection status. */
-    xcpConnected = false;
-  }
+      /* Disconnect the transport layer. */
+      xcpSettings.transport->Disconnect();
+      /* Reset connection status. */
+      xcpConnected = false;
+    }
   }
 } /*** end of XcpLoaderStop ***/
 
