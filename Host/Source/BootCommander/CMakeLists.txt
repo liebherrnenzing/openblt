@@ -86,6 +86,7 @@ endif(WIN32)
 
 add_definitions(-DLIBOPENBLT_CAN_ENABLE)
 add_definitions(-DLIBOPENBLT_USB_ENABLE)
+add_definitions(-DLIBOPENBLT_NET_ENABLE)
 add_definitions(-DLIBOPENBLT_FIRMWARE_ENABLE)
 add_definitions(-DLIBOPENBLT_UTIL_ENABLE)
 add_definitions(-DLIBOPENBLT_SEED_KEY_ENABLE)

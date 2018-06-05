@@ -108,6 +108,11 @@ LIBOPENBLT_EXPORT char const * BltVersionGetString(void);
  */
 #define BLT_TRANSPORT_XCP_V10_USB      ((uint32_t)2u)
 
+/** \brief Transport layer for the XCP v1.0 protocol that uses TCP/IP for data
+ *         exchange.
+ */
+#define BLT_TRANSPORT_XCP_V10_NET      ((uint32_t)3u)
+
 
 /****************************************************************************************
 * Type definitions
@@ -117,8 +122,8 @@ typedef struct t_blt_session_settings_xcp_v10
 {
   uint16_t timeoutT1;            /**< Command response timeout in milliseconds.        */
   uint16_t timeoutT3;            /**< Start programming timeout in milliseconds.       */
-  uint16_t timeoutT4;            /**< Erase memory timeout in milliseonds.             */
-  uint16_t timeoutT5;            /**< Program memory and reset timeout in milliseonds. */
+  uint16_t timeoutT4;            /**< Erase memory timeout in milliseconds.            */
+  uint16_t timeoutT5;            /**< Program memory and reset timeout in milliseconds.*/
   uint16_t timeoutT7;            /**< Busy wait timer timeout in milliseonds.          */
   char const * seedKeyFile;      /**< Seed/key algorithm library filename.             */
   uint8_t connectMode;           /**< Connection mode parameter in XCP connect command.*/
@@ -159,6 +164,17 @@ typedef struct t_blt_transport_settings_xcp_v10_can
   uint32_t receiveId;            /**< Receive CAN identifier.                          */
   uint32_t useExtended;          /**< Boolean to configure 29-bit CAN identifiers.     */
 } tBltTransportSettingsXcpV10Can;
+
+/** \brief Structure layout of the XCP version 1.0 NET transport layer settings. The
+ *         address field can be set to either the IP address or the hostname, such as
+ *         "192.168.178.23" or "mymicro.mydomain.com". The port should be set to the 
+ *         TCP port number that the bootloader target listens on.
+ */
+typedef struct t_blt_transport_settings_xcp_v10_net
+{
+  char const * address;          /**< Target IP-address or hostname on the network.    */
+  uint16_t port;                 /**< TCP port to use.                                 */
+} tBltTransportSettingsXcpV10Net;
 
 
 /****************************************************************************************

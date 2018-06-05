@@ -98,6 +98,7 @@ endif(WIN32)
 
 add_definitions(-DLIBOPENBLT_CAN_ENABLE)
 add_definitions(-DLIBOPENBLT_USB_ENABLE)
+add_definitions(-DLIBOPENBLT_NET_ENABLE)
 add_definitions(-DLIBOPENBLT_FIRMWARE_ENABLE)
 add_definitions(-DLIBOPENBLT_UTIL_ENABLE)
 add_definitions(-DLIBOPENBLT_SEED_KEY_ENABLE)
@@ -150,7 +151,8 @@ set(
 # "make openblt_static" to individually build the static library. 
 # Note that when you link your own application to the static library of LibOpenBLT under
 # Unix, you need to also link the LibUsb and LibDL libraries by adding usb-1.0 and dl to
-# the linker library dependencies.
+# the linker library dependencies. Under Windows, you need to also link the Winsock
+# library by adding ws2_32 to the linker library dependencies. 
 if(BUILD_STATIC)
   add_library(openblt_static STATIC ${LIB_SRCS})
   SET_TARGET_PROPERTIES(openblt_static PROPERTIES OUTPUT_NAME openblt CLEAN_DIRECT_OUTPUT 1)
@@ -172,6 +174,9 @@ if(BUILD_SHARED)
     # path. This way an (optional) seed and key shared library file can simply be in the
     # same directory as the LibOpenBLT shared library.
     target_link_libraries(openblt_shared usb-1.0 dl "-Wl,-rpath,.")
+  elseif(WIN32)
+    # Link the Winsock library
+    target_link_libraries(openblt_shared ws2_32)
   endif(UNIX)  
   if(CMAKE_C_COMPILER_ID MATCHES MSVC)
     # Microsoft Visual Studio does not add "lib" to the name of the DLL, whereas GCC

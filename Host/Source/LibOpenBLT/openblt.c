@@ -45,6 +45,9 @@
 #ifdef LIBOPENBLT_USB_ENABLE
 #include "xcptpusb.h"                       /* XCP USB transport layer                 */
 #endif
+#ifdef LIBOPENBLT_NET_ENABLE
+#include "xcptpnet.h"                       /* XCP TCP/IP transport layer              */
+#endif
 
 /****************************************************************************************
 * Macro definitions
@@ -53,10 +56,10 @@
  *         for major-, minor-, and patch-version. Version 1.05.12 would for example be
  *         10512.
  */
-#define BLT_VERSION_NUMBER   (10200u)
+#define BLT_VERSION_NUMBER   (10300u)
 
 /** \brief The version number of the library as a null-terminated string. */
-#define BLT_VERSION_STRING   "1.02.00"
+#define BLT_VERSION_STRING   "1.03.00"
 
 
 /****************************************************************************************
@@ -71,7 +74,7 @@ char const bltVersionString[] = BLT_VERSION_STRING;
 ****************************************************************************************/
 /************************************************************************************//**
 ** \brief     Obtains the version number of the library as an integer. The number has two
-**            digits for major-, minor-, and build-version. Version 1.05.12 would for
+**            digits for major-, minor-, and patch-version. Version 1.05.12 would for
 **            example return 10512.
 ** \return    Library version number as an integer.
 **
@@ -121,26 +124,12 @@ LIBOPENBLT_EXPORT void BltSessionInit(uint32_t sessionType,
    */
   assert(sessionType == BLT_SESSION_XCP_V10);
 
-#if defined(LIBOPENBLT_CAN_ENABLE) && !defined(LIBOPENBLT_USB_ENABLE)
-  assert( (transportType == BLT_TRANSPORT_XCP_V10_RS232) || \
-          (transportType == BLT_TRANSPORT_XCP_V10_CAN) );
-#endif
-
-#if defined(LIBOPENBLT_USB_ENABLE) && !defined(LIBOPENBLT_CAN_ENABLE)
-  assert( (transportType == BLT_TRANSPORT_XCP_V10_RS232) || \
-          (transportType == BLT_TRANSPORT_XCP_V10_USB) );
-#endif
-
-#if !defined(LIBOPENBLT_CAN_ENABLE) && !defined(LIBOPENBLT_USB_ENABLE)
-  assert( transportType == BLT_TRANSPORT_XCP_V10_RS232 );
-#endif
-
-#if defined(LIBOPENBLT_CAN_ENABLE) && defined(LIBOPENBLT_USB_ENABLE)
+#if defined(LIBOPENBLT_CAN_ENABLE) && defined(LIBOPENBLT_USB_ENABLE) && defined(LIBOPENBLT_NET_ENABLE)
   assert( (transportType == BLT_TRANSPORT_XCP_V10_RS232) || \
           (transportType == BLT_TRANSPORT_XCP_V10_CAN) || \
-          (transportType == BLT_TRANSPORT_XCP_V10_USB) );
+          (transportType == BLT_TRANSPORT_XCP_V10_USB) || \
+          (transportType == BLT_TRANSPORT_XCP_V10_NET) );
 #endif
-
 
   /* Initialize the correct session. */
   if (sessionType == BLT_SESSION_XCP_V10) /*lint !e774 */
@@ -232,6 +221,34 @@ LIBOPENBLT_EXPORT void BltSessionInit(uint32_t sessionType,
         xcpLoaderSettings.transport = XcpTpUsbGetTransport();
       }
 #endif
+#ifdef LIBOPENBLT_NET_ENABLE
+      else if (transportType == BLT_TRANSPORT_XCP_V10_NET)
+      {
+        /* Verify transportSettings parameters because the XCP NET transport layer
+         * requires them.
+         */
+        assert(transportSettings != NULL);
+        /* Only continue if the transportSettings parameter is valid. */
+        if (transportSettings != NULL) /*lint !e774 */
+        {
+          /* Cast transport settings to the correct type. */
+          tBltTransportSettingsXcpV10Net * bltTransportSettingsXcpV10NetPtr;
+          bltTransportSettingsXcpV10NetPtr =
+            (tBltTransportSettingsXcpV10Net * )transportSettings;
+          /* Convert transport settings to the format supported by the XCP NET transport
+           * layer. It was made static to make sure it doesn't get out of scope when
+           * used in xcpLoaderSettings.
+           */
+          static tXcpTpNetSettings xcpTpNetSettings;
+          xcpTpNetSettings.address = bltTransportSettingsXcpV10NetPtr->address;
+          xcpTpNetSettings.port = bltTransportSettingsXcpV10NetPtr->port;
+          /* Store transport layer settings in the XCP loader settings. */
+          xcpLoaderSettings.transportSettings = &xcpTpNetSettings;
+          /* Link the transport layer to the XCP loader settings. */
+          xcpLoaderSettings.transport = XcpTpNetGetTransport();
+        }
+      }
+#endif
       /* Perform actual session initialization. */
       SessionInit(XcpLoaderGetProtocol(), &xcpLoaderSettings);
     }
@@ -289,7 +306,7 @@ LIBOPENBLT_EXPORT void BltSessionStop(bool disconnect)
 /************************************************************************************//**
 ** \brief     Requests the target to erase the specified range of memory on the target.
 **            Note that the target automatically aligns this to the erasable memory
-**            block sizes. This typically results in more memory being erased that the
+**            block sizes. This typically results in more memory being erased than the
 **            range that was specified here. Refer to the target implementation for
 **            details.
 ** \param     address The starting memory address for the erase operation.
