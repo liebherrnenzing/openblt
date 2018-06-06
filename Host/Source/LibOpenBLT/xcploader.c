@@ -405,7 +405,9 @@ static bool XcpLoaderStart(void)
 ** \brief     Stops the firmware update. This is where the bootloader starts the user
 **            program on the target if a valid one is present. After this the connection
 **            with the target is severed.
-**
+** \param     disconnect true stop xcp loader and disconnect, false stop but do not 
+**            disconnect. This is useful if someone want to add some following read 
+**            commands or something else.
 ****************************************************************************************/
 static void XcpLoaderStop(bool disconnet)
 {
