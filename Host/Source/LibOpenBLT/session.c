@@ -109,12 +109,12 @@ bool SessionStart(void)
 **           with the target is severed.
 **
 ****************************************************************************************/
-void SessionStop(void)
+void SessionStop(bool disconnect)
 {
   /* Pass the request on to the linked protocol module. */
   if (protocolPtr != NULL)
   {
-    protocolPtr->Stop();
+    protocolPtr->Stop(disconnect);
   }
 } /*** end of SessionStop ***/
 

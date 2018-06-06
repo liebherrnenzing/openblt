@@ -61,7 +61,7 @@ typedef struct t_session_protocol
    *         program on the target if a valid one is present. After this the connection
    *         with the target is severed.
    */
-  void (* Stop) (void);
+  void (* Stop) (bool disconnect);
   /** \brief Requests the bootloader to erase the specified range of memory on the
    *         target. The bootloader aligns this range to hardware specified erase blocks.
    */
@@ -84,7 +84,7 @@ typedef struct t_session_protocol
 void SessionInit(tSessionProtocol const * protocol, void const * protocolSettings);
 void SessionTerminate(void);
 bool SessionStart(void);
-void SessionStop(void);
+void SessionStop(bool disconnect);
 bool SessionClearMemory(uint32_t address, uint32_t len);
 bool SessionWriteData(uint32_t address, uint32_t len, uint8_t const * data);  
 bool SessionReadData(uint32_t address, uint32_t len, uint8_t * data);

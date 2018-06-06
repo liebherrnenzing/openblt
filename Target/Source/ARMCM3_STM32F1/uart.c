@@ -86,6 +86,9 @@ typedef struct
 #elif (BOOT_COM_UART_CHANNEL_INDEX == 1)
 /** \brief Set UART base address to USART2. */
 #define UARTx          ((tUartRegs *) (blt_int32u)0x40004400)
+#elif (BOOT_COM_UART_CHANNEL_INDEX == 2)
+/** \brief Set UART base address to USART3. */
+#define UARTx          ((tUartRegs *) (blt_int32u)0x40004800)
 #else
 /** \brief Set UART base address to USART1 by default. */
 #define UARTx          ((tUartRegs *) (blt_int32u)0x40013800)
@@ -106,10 +109,12 @@ static blt_bool UartTransmitByte(blt_int8u data);
 ****************************************************************************************/
 void UartInit(void)
 {
-  /* the current implementation supports USART1 and USART2. throw an assertion error in
+  /* the current implementation supports USART1, USART2 and USART3. throw an assertion error in
    * case a different UART channel is configured.
    */
-  ASSERT_CT((BOOT_COM_UART_CHANNEL_INDEX == 0) || (BOOT_COM_UART_CHANNEL_INDEX == 1));
+  ASSERT_CT((BOOT_COM_UART_CHANNEL_INDEX == 0) ||
+            (BOOT_COM_UART_CHANNEL_INDEX == 1) ||
+            (BOOT_COM_UART_CHANNEL_INDEX == 2));
   /* first reset the UART configuration. note that this already configures the UART
    * for 1 stopbit, 8 databits and no parity.
    */

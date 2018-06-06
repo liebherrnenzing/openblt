@@ -49,7 +49,7 @@
  * and enables you to have just one bootloader source base.
  */
 #include "types.h"                                    /* variable types                */
-#include "assert.h"                                   /* assertion checks              */
+#include "blt_assert.h"                               /* assertion checks              */
 #ifdef PROJ_BLT_CONF_H
 #include PROJ_BLT_CONF_H                              /* custom configuration          */
 #else
@@ -63,6 +63,7 @@
 #include "backdoor.h"                                 /* backdoor entry module         */
 #include "file.h"                                     /* file system module            */
 #include "com.h"                                      /* communication interface       */
+#include "comm_usr.h"                                 /* user interface module         */
 
 
 /****************************************************************************************

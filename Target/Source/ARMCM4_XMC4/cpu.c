@@ -99,6 +99,10 @@ void CpuStartUserProgram(void)
   /* release the communication interface */
   ComFree();
 #endif
+#if (COMM_USR_ENABLE > 0)
+  /* release the user interface */
+  CommUsrFree();
+#endif
   /* reset the timer */
   TimerReset();
   /* remap user program's vector table */
