@@ -126,6 +126,54 @@ void CpuStartUserProgram(void)
   __set_MSP(*(__IO uint32_t *)(CPU_USER_PROGRAM_STARTADDR_PTR-4));
 #endif
 
+#ifdef OPENBLT_CPU1
+#include "stm32f10x_gpio.h"
+/* TODO: REMOVE ME DEBUG START */
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_SET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_RESET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_SET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_RESET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_SET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_RESET);
+/* DEBUG END */
+#else
+#include "stm32f10x_gpio.h"
+/* TODO: REMOVE ME DEBUG START */
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_SET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_RESET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_SET);
+  	__NOP();
+  	__NOP();
+   	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_RESET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_SET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_RESET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_SET);
+  	__NOP();
+  	__NOP();
+  	GPIO_WriteBit(GPIOD,  GPIO_Pin_1, Bit_RESET);
+/* DEBUG END */
+#endif
+
   /* start the user program by activating its reset interrupt service routine */
   pProgResetHandler();
 } /*** end of CpuStartUserProgram ***/
